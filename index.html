@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROMPT DRE MAY — Hyper-Realistic Image Describer</title>
+<script src="https://js.puter.com/v2/"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 50%, #f7fff9 100%);
+    min-height: 100vh;
+    color: #1a3a2a;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 760px;
+    background: #ffffff;
+    border: 2px solid #10b981;
+    border-radius: 18px;
+    padding: 22px 20px;
+    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.18),
+                0 4px 14px rgba(0, 0, 0, 0.06);
+  }
+
+  /* === VIDEO MP4 16:9 === */
+  .video-wrap {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
+    border-radius: 14px;
+    overflow: hidden;
+    border: 3px solid #10b981;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+    margin-bottom: 20px;
+    background: #000;
+  }
+
+  .video-wrap video {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border: none;
+  }
+
+  /* === AUDIO MP3 (hidden) === */
+  #bgAudio { display: none; }
+
+  /* === HEADER === */
+  .header { text-align: center; margin-bottom: 18px; }
+
+  .title {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 30px;
+    font-weight: 900;
+    color: #065f46;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 0 #d1fae5;
+  }
+
+  .subtitle {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 13px;
+    color: #059669;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 5px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+    background: #d1fae5;
+    border: 1px solid #10b981;
+    color: #065f46;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  /* === PERINGATAN === */
+  .warning-box {
+    margin: 16px 0;
+    padding: 14px 16px;
+    border: 2px dashed #dc2626;
+    background: #fef2f2;
+    border-radius: 12px;
+    color: #991b1b;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.6;
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  .warning-box .emoji { font-size: 18px; }
+
+  /* === UPLOAD === */
+  .upload-area {
+    margin-top: 18px;
+    border: 2px dashed #10b981;
+    border-radius: 14px;
+    padding: 30px 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: #f0fdf4;
+  }
+
+  .upload-area:hover,
+  .upload-area.active {
+    border-color: #059669;
+    background: #dcfce7;
+    transform: translateY(-2px);
+  }
+
+  .upload-area input { display: none; }
+
+  .upload-icon { font-size: 40px; margin-bottom: 8px; display: block; }
+
+  .upload-text {
+    font-size: 15px;
+    color: #065f46;
+    font-weight: 700;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  .upload-hint {
+    font-size: 12px;
+    color: #047857;
+    margin-top: 6px;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  .preview { margin-top: 16px; display: none; text-align: center; }
+
+  .preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 12px;
+    border: 2px solid #10b981;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  }
+
+  /* === BUTTON === */
+  .btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Times New Roman', Times, serif;
+    letter-spacing: 0.8px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #ffffff;
+    background: linear-gradient(135deg, #059669, #10b981, #34d399);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+    transition: all 0.25s ease;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(16, 185, 129, 0.5);
+  }
+
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* === STATUS === */
+  .status {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    text-align: center;
+    display: none;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: 700;
+  }
+
+  .status.loading {
+    display: block;
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    color: #065f46;
+  }
+
+  .status.error {
+    display: block;
+    background: #fef2f2;
+    border: 1px solid #dc2626;
+    color: #991b1b;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    border-top-color: #059669;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: -2px;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* === RESULT === */
+  .result-box {
+    margin-top: 18px;
+    display: none;
+    background: #f0fdf4;
+    border: 1px solid #10b981;
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #a7f3d0;
+  }
+
+  .result-title {
+    font-size: 13px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #065f46;
+    font-weight: 700;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  .copy-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 1px solid #10b981;
+    background: #ffffff;
+    color: #065f46;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  .copy-btn:hover { background: #d1fae5; }
+
+  .result-text {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #1a3a2a;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  /* === LINKS === */
+  .links-section {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 2px solid #a7f3d0;
+  }
+
+  .links-title {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #065f46;
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  .link-btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 13px 16px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Times New Roman', Times, serif;
+    border-radius: 10px;
+    transition: all 0.25s ease;
+    letter-spacing: 0.5px;
+  }
+
+  .link-wa-channel {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+  }
+
+  .link-wa-group {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+  }
+
+  .link-smm {
+    background: linear-gradient(135deg, #047857, #059669);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.3);
+  }
+
+  .link-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+  }
+
+  /* === FOOTER === */
+  .footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #047857;
+    letter-spacing: 0.5px;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  .footer span { color: #065f46; font-weight: 900; }
+
+  /* === MUTE BUTTON === */
+  .mute-btn {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 2px solid #10b981;
+    background: #ffffff;
+    color: #065f46;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .mute-btn:hover {
+    background: #d1fae5;
+    transform: scale(1.08);
+  }
+</style>
+</head>
+<body>
+
+<!-- ==== TOMBOL MUTE (biar user bisa matikan audio) ==== -->
+<button class="mute-btn" id="muteBtn" title="Mute/Unmute">🔊</button>
+
+<div class="container">
+
+  <!-- ==== VIDEO MP4 16:9 (LOKAL) ==== -->
+  <div class="video-wrap">
+    <video 
+      src="video.mp4" 
+      autoplay 
+      muted 
+      loop 
+      playsinline
+      preload="auto">
+      Browser kamu tidak mendukung video MP4.
+    </video>
+  </div>
+
+  <!-- ==== AUDIO MP3 LOKAL (AUTOPLAY) ==== -->
+  <audio id="bgAudio" autoplay loop preload="auto">
+    <source src="audio.mp3" type="audio/mpeg">
+    Browser kamu tidak mendukung audio MP3.
+  </audio>
+
+  <!-- ==== HEADER ==== -->
+  <div class="header">
+    <div class="title">PROMPT DRE MAY</div>
+    <div class="subtitle">Hyper-Realistic Image Describer</div>
+    <div class="badge">✦ Unlimited • Cinematic • Full 3D • Forensic Detail ✦</div>
+  </div>
+
+  <!-- ==== PERINGATAN ==== -->
+  <div class="warning-box">
+    <span class="emoji">⚠️</span> 
+    GENERATOR INI JANGAN DI PERJUAL BELIKAN, INI KHUSUS BUAT MEMBER DRE MAY SAJA 
+    DAN JIKA ADA YANG KETAHUAN PERJUAL BELIKAN, LANGSUNG GUA SEMEKDON LU, DENGAR ITU 🖕
+    <span class="emoji">⚠️</span>
+  </div>
+
+  <!-- ==== UPLOAD ==== -->
+  <label class="upload-area" id="uploadArea">
+    <input type="file" id="fileInput" accept="image/*">
+    <span class="upload-icon">📸</span>
+    <div class="upload-text">Tap untuk pilih gambar referensi</div>
+    <div class="upload-hint"></div>
+  </label>
+
+  <div class="preview" id="preview">
+    <img id="previewImg" alt="preview">
+  </div>
+
+  <button class="btn" id="generateBtn" disabled>
+    ✦ Generate Ultra-Detailed Prompt ✦
+  </button>
+
+  <div class="status" id="status"></div>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-header">
+      <div class="result-title">📜 Hasil — PROMPT DRE MAY</div>
+      <button class="copy-btn" id="copyBtn">📋 Copy</button>
+    </div>
+    <div class="result-text" id="resultText"></div>
+  </div>
+
+  <!-- ==== LINKS ==== -->
+  <div class="links-section">
+    <div class="links-title">✦ Link Penting ✦</div>
+
+    <a class="link-btn link-wa-channel" 
+       href="https://whatsapp.com/channel/0029VbDaAB342DcVwHTBdL17" 
+       target="_blank" rel="noopener">
+      📢 Join Saluran WhatsApp Dre May
+    </a>
+
+    <a class="link-btn link-wa-group" 
+       href="https://chat.whatsapp.com/IlhdCVVmSVl0OhkpQ5hvkp" 
+       target="_blank" rel="noopener">
+      👥 Join Grup WhatsApp Dre May
+    </a>
+
+    <a class="link-btn link-smm" 
+       href="https://andre-storeeeee.vercel.app/" 
+       target="_blank" rel="noopener">
+      🚀 Order Suntik Sosmed
+    </a>
+  </div>
+
+  <div class="footer">
+    Powered by <span>PROMPT DRE MAY</span> × Puter.js
+  </div>
+</div>
+
+<script>
+// ============================================
+//  PROMPT DRE MAY — Web Generator V5
+//  MP4 Video • MP3 Audio • Local Files
+// ============================================
+
+const SYSTEM_PROMPT = `
+You are PROMPT DRE MAY, an elite forensic-level visual analyst, cinematic art director, 
+and hyper-realistic image description specialist. Your descriptions are used to RECREATE 
+the exact reference image with 100% fidelity using advanced AI image generators.
+
+ABSOLUTE RULES:
+1. ALWAYS respond in ENGLISH only. Never any other language.
+2. Output MUST be ONE SINGLE PARAGRAPH. No bullet points, no lists, no line breaks.
+3. Your description must be SO DETAILED and SO ACCURATE that anyone could recreate 
+   the EXACT SAME image from your words alone — matching the reference perfectly.
+4. Capture EVERYTHING visible, no matter how small:
+   - EXACT subject count, identity, apparent age, gender, ethnicity, expression, gaze 
+     direction, head tilt, pose, hand placement, body language, posture
+   - EXACT clothing: color, fabric, weave, folds, wrinkles, stitching, buttons, patterns, 
+     wear marks, translucency
+   - Skin: pores, freckles, moles, scars, veins, sweat, subsurface scattering, tone gradient
+   - Hair: color, length, texture, strand direction, flyaways, highlights, wetness
+   - Eyes: iris color, catchlights, lashes, reflections of the environment
+   - Environment: EXACT location, foreground / midground / background objects, textures, 
+     architecture, vegetation, weather, air particles, haze
+   - Lighting: EXACT source, direction, color temperature in Kelvin, shadow softness, 
+     rim light, bounce light, specular highlights, reflections, caustics
+   - Color palette: EXACT dominant hues, accent colors, saturation, contrast, overall grade
+   - Camera: lens, focal length, aperture, shutter, ISO, angle, height, shot type, composition
+   - Materials: metal specularity, glass refraction, water caustics, fabric sheen, 
+     wood grain, stone texture, plastic subsurface
+   - Mood: emotion, atmosphere, story implied
+   - Style: cinematic / editorial / documentary / photorealistic / 8K HDR
+5. Use RICH, ELEGANT, CINEMATIC vocabulary — luxury-grade art direction language.
+6. NEVER summarize. NEVER shorten. NEVER skip. The longer and more precise, the better.
+7. Include 3D depth cues: volumetric fog, parallax layers, ray-traced reflections, 
+   subsurface scattering, ambient occlusion, depth of field, HDR tones.
+8. Transcribe ANY visible text word-for-word with exact placement.
+9. If multiple subjects appear, describe each in full within the SAME paragraph.
+10. Do NOT add greetings, disclaimers, or closing sentences. Just the pure description.
+`;
+
+const USER_PROMPT = `
+Analyze this reference image and produce ONE SINGLE PARAGRAPH of HYPER-REALISTIC, 
+FORENSIC-LEVEL, ELEGANT, CINEMATIC, FULL-3D description in ENGLISH ONLY.
+
+The description MUST be detailed enough to recreate this EXACT image with 100% fidelity.
+Cover every micro-detail: subject, expression, pose, clothing, skin texture, hair strands, 
+eyes, environment, lighting with Kelvin temperature, colors, camera specs, materials, 
+3D depth cues, atmosphere, and mood.
+
+Rules:
+- One single flowing paragraph, no lists, no line breaks.
+- English only.
+- Ultra-detailed, luxury-grade art direction.
+- No greeting, no disclaimer, no summary.
+- Match the reference image EXACTLY.
+`;
+
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const previewImg = document.getElementById('previewImg');
+const generateBtn = document.getElementById('generateBtn');
+const statusEl = document.getElementById('status');
+const resultBox = document.getElementById('resultBox');
+const resultText = document.getElementById('resultText');
+const copyBtn = document.getElementById('copyBtn');
+const bgAudio = document.getElementById('bgAudio');
+const muteBtn = document.getElementById('muteBtn');
+
+let selectedImageDataUrl = null;
+let audioStarted = false;
+
+// === AUTOPLAY AUDIO (handle browser block) ===
+function tryPlayAudio() {
+  if (!audioStarted) {
+    bgAudio.play()
+      .then(() => { audioStarted = true; })
+      .catch(() => {});
+  }
+}
+
+// Coba autoplay langsung
+window.addEventListener('load', () => {
+  tryPlayAudio();
+});
+
+// Fallback: play saat user interaksi pertama
+document.body.addEventListener('click', tryPlayAudio, { once: true });
+document.body.addEventListener('touchstart', tryPlayAudio, { once: true });
+document.body.addEventListener('keydown', tryPlayAudio, { once: true });
+
+// === MUTE / UNMUTE ===
+muteBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  bgAudio.muted = !bgAudio.muted;
+  muteBtn.textContent = bgAudio.muted ? '🔇' : '🔊';
+
+  // Kalau di-unmute dan belum play, coba play
+  if (!bgAudio.muted && bgAudio.paused) {
+    bgAudio.play().catch(() => {});
+  }
+});
+
+// === HANDLE UPLOAD ===
+uploadArea.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    selectedImageDataUrl = ev.target.result;
+    previewImg.src = selectedImageDataUrl;
+    preview.style.display = 'block';
+    generateBtn.disabled = false;
+    resultBox.style.display = 'none';
+    statusEl.className = 'status';
+    statusEl.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+// === GENERATE ===
+generateBtn.addEventListener('click', async () => {
+  if (!selectedImageDataUrl) return;
+
+  generateBtn.disabled = true;
+  resultBox.style.display = 'none';
+  statusEl.className = 'status loading';
+  statusEl.innerHTML = '<span class="spinner"></span> Menganalisis dengan detail forensik... (15-40 detik)';
+
+  try {
+    const response = await puter.ai.chat(
+      [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: [
+          { type: 'text', text: USER_PROMPT },
+          { type: 'image_url', image_url: { url: selectedImageDataUrl } }
+        ]}
+      ],
+      { model: 'google/gemini-2.5-flash' }
+    );
+
+    let text = '';
+    if (typeof response === 'string') text = response;
+    else if (response?.message?.content) {
+      const c = response.message.content;
+      text = Array.isArray(c) ? c.map(x => x.text || '').join('\n') : c;
+    } else if (response?.text) text = response.text;
+    else text = JSON.stringify(response);
+
+    resultText.textContent = text.trim();
+    resultBox.style.display = 'block';
+    statusEl.className = 'status';
+    statusEl.style.display = 'none';
+
+  } catch (err) {
+    console.error(err);
+    statusEl.className = 'status error';
+    statusEl.innerHTML = '❌ Gagal: ' + (err.message || 'Coba lagi sebentar lagi.');
+  } finally {
+    generateBtn.disabled = false;
+  }
+});
+
+// === COPY ===
+copyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(resultText.textContent);
+    copyBtn.textContent = '✅ Copied!';
+    setTimeout(() => copyBtn.textContent = '📋 Copy', 1800);
+  } catch {
+    copyBtn.textContent = '❌ Gagal';
+    setTimeout(() => copyBtn.textContent = '📋 Copy', 1800);
+  }
+});
+</script>
+
+</body>
+</html>
